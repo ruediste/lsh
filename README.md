@@ -51,30 +51,61 @@ Thus $Z\sim N(0,v^2)$.
 
 #### Histogram PDF
 
-We can treat a histogram PDF as a sum of impulses. With $n$ bins, $B(i)$ and $C(i)$ the probability and center of bin $i$ respectively, we have get
+We can treat a histogram PDF as a sum of impulses. With $n$ bins and $B_i$ and $C_i$ as the probability and center of bin $i$ respectively, we get
 
 $$
 \begin{align}
-f_Z(z) &= \sum_{i=1}^n\int^\infty_{-\infty} B(i) \delta(z-C(i))  f_N( z/x)  \frac{1}{|x|}\, dx\\
-&=  \sum_{i=1}^n B(i)\int^\infty_{-\infty} \delta(z-C(i))  f_N( z/x)  \frac{1}{|x|}\, dx\\
-&=  \sum_{i=1}^n B(i)f_N(z/C(i))\frac{1}{|C(i)|}\\
-&=  \sum_{i=1}^n B(i)f_N(z|0,C(i)^2)\\
+f_Z(z) &= \sum_{i=1}^n\int^\infty_{-\infty} B_i \delta(z-C_i)  f_N( z/x)  \frac{1}{|x|}\, dx\\
+&=  \sum_{i=1}^n B_i\int^\infty_{-\infty} \delta(z-C_i)  f_N( z/x)  \frac{1}{|x|}\, dx\\
+&=  \sum_{i=1}^n B_if_N(z/C_i)\frac{1}{|C_i|}\\
+&=  \sum_{i=1}^n B_if_N(z|0,C_i^2)\\
 \end{align}
 $$
 
-If $X$ is distributed normally with mean $\mu$ and variance $\sigma^2$, then $ aX \sim N( a \mu, a^2\sigma^2)$. Using this we can further simplify the sum above:
+From [Stack Overflow](https://stats.stackexchange.com/questions/205126/standard-deviation-for-weighted-sum-of-normal-distributions):
+
+Two normally distributed random variable $H_0$ and $H_1$, which are combined to give the weighted distribution $H$ as follows:
 
 $$
 \begin{align}
-f_Z(z)&=  \sum_{i=1}^n B(i)f_N(z|0,C(i)^2)\\
-&=  \sum_{i=1}^n f_N(z|0,B(i)^2C(i)^2)\\
+H_0 &\sim N(\mu_0, \sigma_0)\\
+H_1 &\sim N(\mu_1, \sigma_1)\\
+f_H &= p * f_1(x) + (1-p)  f_0(x)
 \end{align}
 $$
 
-If $X_1$ and $X_2$ are two independent normal random variables with means $\mu_1$ and $\mu_2$, and variances $\sigma^2_1$ and $\sigma^2_2$. Then their sum $X_1 + X_2 $ will also be normally distributed, with mean $\mu_1 + \mu_2$ and variance $\sigma^2_1 + \sigma^2_2$. Therefore we get
+The random variable $H$ is the mixture of two normal distributions. For the mean of $H$
+
+$$E(H) = \int x\left(pf_1(x) + (1-p)f_0(x) \right) dx = p\mu_1 + (1-p)\mu_0. $$
+
+Similarly for the second moment of H
+
+$$
+\begin{align*}
+E(H^2)& = \int x^2 \left(pf_1(x) + (1-p)f_0(x) \right) dx\\
+& = pE(H_1^2) + (1-p)E(H_0^2)\\
+& = p(\sigma_1^2 + \mu_1^2) + (1-p)(\sigma_0^2 + \mu_0^2)
+\end{align*}
+$$
+
+Finally,
+
+$$
+\begin{align*}
+Var(H) & = E(H^2) - [E(H)]^2\\
+& = p(\sigma_1^2 + \mu_1^2) + (1-p)(\sigma_0^2 + \mu_0^2) - \left[p\mu_1 + (1-p)\mu_0 \right]^2\\
+& = \left[p\sigma_1^2 + (1-p)\sigma_0^2\right] + [p\mu_1^2 + (1-p)\mu_0^2]- \left[p\mu_1 + (1-p)\mu_0 \right]^2\\
+& = p\sigma^2_1+(1−p)\sigma^2_0+p(1−p)(\mu_1−\mu_0)^2
+\end{align*}
+$$
+
+Taking the square root of $Var(H)$, you get the standard deviation.
+
+In our case, $\mu_0$ and $\mu_1$ are both zero, thus $\sigma^2= p\sigma^2_1+(1−p)\sigma^2_0$. Using this we can further simplify the sum above:
 
 $$
 \begin{align}
-f_Z(z) &= f_N(z | 0, \sum_{i=1}^n B(i)^2C(i)^2)
+f_Z(z)&=  \sum_{i=1}^n B_if_N(z|0,C_i^2)\\
+&=  f_N(z|0,\sum_{i=1}^n (B_iC_i^2))\\
 \end{align}
 $$

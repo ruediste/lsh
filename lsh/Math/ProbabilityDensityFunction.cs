@@ -5,6 +5,31 @@ namespace lsh.LshMath;
 public interface ProbabilityDensityFunction
 {
     double Probability(double x);
+
+    public static (HistogramPDF dNn, HistogramPDF dAny) FromDistances(DenseVector[] data)
+    {
+        // calculate d_any
+        var distances = new List<double>();
+        var minDistances = new List<double>();
+        for (int i = 0; i < data.Length; i++)
+        {
+            double minDist = double.PositiveInfinity;
+            for (int j = 0; j < data.Length; j++)
+            {
+                if (i == j) continue;
+                var dist = data[i].DistanceTo(data[j]);
+                if (j > i)
+                    distances.Add(dist);
+                if (dist < minDist)
+                {
+                    minDist = dist;
+                }
+            }
+            minDistances.Add(minDist);
+        }
+
+        return (dNn: new HistogramPDF(minDistances), dAny: new HistogramPDF(distances));
+    }
 }
 
 public class GaussianPDF : ProbabilityDensityFunction
@@ -19,11 +44,26 @@ public class GaussianPDF : ProbabilityDensityFunction
     public double MaxIntegrationStepSize(double x)
     {
         var distFromMean = Math.Abs(Mean - x);
-        if (distFromMean > 3 * StandardDeviation)
-            return StandardDeviation / 2;
-        return StandardDeviation / 10;
+        if (distFromMean > 6 * StandardDeviation)
+            return StandardDeviation / 4;
+        return StandardDeviation / 20;
     }
 
+    public double TriangleProbability(double w)
+    {
+        var result = 0.0;
+        var x = -w;
+        while (x < w)
+        {
+            var step = Math.Min(w / 10, MaxIntegrationStepSize(x));
+            result += step * (1 - Math.Abs(x / w)) * Probability(x);
+            x += step;
+        }
+        return result;
+    }
+
+    public override string ToString()
+    => $"N({Mean},{StandardDeviation} ^2)";
 }
 
 public class UnitImpulsePdf
@@ -42,27 +82,11 @@ public class MultiplicationPDF(Func<double, double> func) : ProbabilityDensityFu
 {
     public double Probability(double x) => func(x);
 
-    public static MultiplicationPDF Create(HistogramPDF left, GaussianPDF right)
-    => new MultiplicationPDF((y) =>
-    {
-        var result = 0.0;
-        var x = left.Min;
-        while (x < left.Max)
-        {
-            result += left.Probability(x) * right.Probability(y / x) * 1 / Math.Abs(x);
-            x += Math.Min(left.BinWidth, right.MaxIntegrationStepSize(x));
-        }
-        return result;
-    });
+    public static GaussianPDF CreateUnitNormal(HistogramPDF left)
+    => new GaussianPDF() { StandardDeviation = Math.Sqrt(left.Probabilities.Select(x => x.Probability * x.Center * x.Center).Sum()) };
 
-    public static MultiplicationPDF Create(UnitImpulsePdf left, GaussianPDF right)
-    => new MultiplicationPDF((y) => right.Probability(y / left.Value) * 1 / Math.Abs(left.Value));
-
-    public double TriangleProbability(double w)
-    {
-        var result = 0.0;
-        for (int i = 0; i
-    }
+    public static GaussianPDF CreateUnitNormal(UnitImpulsePdf left)
+    => new GaussianPDF() { StandardDeviation = left.Value };
 }
 
 public class HistogramPDF : ProbabilityDensityFunction
@@ -92,21 +116,25 @@ public class HistogramPDF : ProbabilityDensityFunction
         {
             Bins[Math.Min(binCount - 1, (int)((value - Min) / BinWidth))]++;
         }
-        var factor = 1.0 / count;
+        var factor = 1.0 / (BinWidth * count);
         for (var i = 0; i < Bins.Length; i++)
             Bins[i] *= factor;
     }
 
     public void Plot(string fileName)
     {
-        Plot myPlot = new();
-        myPlot.Add.Bars(Bins.Select((count, index) => new Bar
+        Plot plot = new();
+        Plot(plot);
+        plot.SavePng(fileName, 400, 300);
+    }
+    public void Plot(Plot plot)
+    {
+        plot.Add.Bars(Bins.Select((count, index) => new Bar
         {
-            Position = Min + (BinWidth * index),
+            Position = Min + (BinWidth * (index + 0.5)),
             Value = count,
             Size = BinWidth
         }));
-        myPlot.SavePng(fileName, 400, 300);
     }
 
     public double Probability(double x)
@@ -116,6 +144,9 @@ public class HistogramPDF : ProbabilityDensityFunction
             return Bins[bin];
         return 0;
     }
+
+    public IEnumerable<(double Center, double Probability)> Probabilities
+    => Bins.Select((p, index) => (Center: Min + (BinWidth * (index + 0.5)), Probability: p));
 
     public override string ToString()
     {
