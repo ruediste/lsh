@@ -52,7 +52,6 @@ public static class FindArgMax
 
                     y1 = y3;
                     x1 = x3;
-
                 }
                 else
                 {

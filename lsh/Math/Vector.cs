@@ -1,20 +1,8 @@
 ﻿namespace lsh.LshMath;
 
-
-public interface Vector
-{
-    public IEnumerable<int> Indices { get; }
-
-    public IEnumerable<double> Values { get; }
-}
-
-public class DenseVector : Vector
+public class DenseVector
 {
     public required double[] Values { get; init; }
-
-    public IEnumerable<int> Indices => Enumerable.Range(0, Values.Length);
-
-    IEnumerable<double> Vector.Values => Values;
 
     public static DenseVector RandomNormal(int length, Random rand)
     {
@@ -47,23 +35,6 @@ public class DenseVector : Vector
         return new DenseVector { Values = values };
     }
 
-    public DenseVector Add(Vector other)
-    {
-        double[] values = new double[Values.Length];
-        foreach ((double value, int index) in other.Values.Zip(other.Indices))
-        {
-            values[index] += value;
-        }
-        return new DenseVector { Values = values };
-    }
+    public double Dot(DenseVector other) => Values.Zip(other.Values, (a, b) => a * b).Sum();
 }
 
-public class SparseVector : Vector
-{
-    public required int[] Indices { get; init; }
-    public required double[] Values { get; init; }
-
-    IEnumerable<int> Vector.Indices => Indices;
-
-    IEnumerable<double> Vector.Values => Values;
-}

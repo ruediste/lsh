@@ -2,10 +2,8 @@ using ScottPlot;
 
 namespace lsh.LshMath;
 
-public interface ProbabilityDensityFunction
+public static class ProbabilityDensityFunction
 {
-    double Probability(double x);
-
     public static (HistogramPDF dNn, HistogramPDF dAny) FromDistances(DenseVector[] data)
     {
         // calculate d_any
@@ -32,7 +30,12 @@ public interface ProbabilityDensityFunction
     }
 }
 
-public class GaussianPDF : ProbabilityDensityFunction
+public interface InputDataProbabilityDistribution
+{
+    GaussianPDF MultiplyWithUnitNormal();
+}
+
+public class GaussianPDF
 {
     public double Mean { get; init; } = 0;
     public double StandardDeviation { get; init; } = 1;
@@ -66,30 +69,15 @@ public class GaussianPDF : ProbabilityDensityFunction
     => $"N({Mean},{StandardDeviation} ^2)";
 }
 
-public class UnitImpulsePdf
+public class UnitImpulsePdf : InputDataProbabilityDistribution
 {
     public required double Value { get; init; }
+
+    public GaussianPDF MultiplyWithUnitNormal()
+    => new GaussianPDF() { StandardDeviation = Value };
 }
 
-// <summary>
-/// A probability density function that is the product of two other PDFs. The general formula to use is:
-/// <code>
-/// Z(y)=int(-infinity,+infinity, x=>X(x)*Y(y/x)*1/abs(x))
-/// </code>
-/// </summary>
-/// <see cref="https://en.wikipedia.org/wiki/Distribution_of_the_product_of_two_random_variables"/>
-public class MultiplicationPDF(Func<double, double> func) : ProbabilityDensityFunction
-{
-    public double Probability(double x) => func(x);
-
-    public static GaussianPDF CreateUnitNormal(HistogramPDF left)
-    => new GaussianPDF() { StandardDeviation = Math.Sqrt(left.Probabilities.Select(x => x.Probability * x.Center * x.Center).Sum()) };
-
-    public static GaussianPDF CreateUnitNormal(UnitImpulsePdf left)
-    => new GaussianPDF() { StandardDeviation = left.Value };
-}
-
-public class HistogramPDF : ProbabilityDensityFunction
+public class HistogramPDF : InputDataProbabilityDistribution
 {
     public readonly double Min;
     public readonly double Max;
@@ -110,7 +98,7 @@ public class HistogramPDF : ProbabilityDensityFunction
         }
 
         var binCount = (int)Math.Ceiling(1 + Math.Log2(count));
-        BinWidth = (Max - Min) / binCount;
+        BinWidth = Max == Min ? 1 : (Max - Min) / binCount;
         Bins = new double[binCount];
         foreach (var value in values)
         {
@@ -152,4 +140,8 @@ public class HistogramPDF : ProbabilityDensityFunction
     {
         return $"Min: {Min} Max: {Max} BinWidth: {BinWidth} Count: {Bins.Length}";
     }
+
+    public GaussianPDF MultiplyWithUnitNormal()
+    => new GaussianPDF() { StandardDeviation = Math.Sqrt(Probabilities.Select(x => x.Probability * x.Center * x.Center).Sum()) };
+
 }

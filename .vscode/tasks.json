@@ -1,0 +1,16 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "type": "dotnet",
+      "task": "watch tests",
+      "file": "/home/ruedi/git/lsh/tests/tests.csproj",
+      "problemMatcher": [],
+      "label": "dotnet: watch tests",
+      "group": {
+        "kind": "test",
+        "isDefault": true
+      }
+    }
+  ]
+}

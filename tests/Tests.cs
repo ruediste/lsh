@@ -1,4 +1,6 @@
 using System.Security.Cryptography;
+using System.Security.Cryptography.X509Certificates;
+using lsh;
 using lsh.LshMath;
 using ScottPlot;
 using ScottPlot.DataSources;
@@ -17,14 +19,14 @@ public class Tests
         var N = 200;
         var random = new Random(0);
 
-        var data = Enumerable.Range(0, N / 4).SelectMany(_ =>
+        var data = Enumerable.Range(0, N).SelectMany(_ =>
         {
             var v = DenseVector.RandomUniform(d, 0, 10, random);
             return new List<DenseVector> {
                 v,
-                v.Add(DenseVector.RandomUniform(d,0,1,random) ),
-                v.Add(DenseVector.RandomUniform(d,0,1,random) ),
-                v.Add(DenseVector.RandomUniform(d,0,1,random) )
+                // v.Add(DenseVector.RandomUniform(d,0,1,random) ),
+                // v.Add(DenseVector.RandomUniform(d,0,1,random) ),
+                // v.Add(DenseVector.RandomUniform(d,0,1,random) )
             };
         }).ToArray();
 
@@ -33,23 +35,27 @@ public class Tests
         dAny.Plot("dAny.png");
         dNn.Plot("dNn.png");
 
-        Console.WriteLine($"plotted");
-        var gNn = MultiplicationPDF.CreateUnitNormal(dNn);
-        var gAny = MultiplicationPDF.CreateUnitNormal(dAny);
+        var set = new LshSet<int>(data.Length, d, 0.1, /*dNn*/ new UnitImpulsePdf() { Value = 2 }, dAny);
+        Console.WriteLine(set);
 
-        Console.WriteLine($"gNn: {gNn}");
-        Console.WriteLine($"gAny: {gAny}");
+        // testing the algorithm
+        data.ForEach((v, i) => set.Add(v, i));
 
-        Console.WriteLine($"Triangle: {gNn.TriangleProbability(1)}");
-
-        Plot plot = new();
-        Func<double, double> f = x => Math.Log(gAny.TriangleProbability(x)) / Math.Log(gNn.TriangleProbability(x));
-        plot.Add.Function(f);
-        plot.Axes.SetLimitsX(1, 200);
-        plot.Axes.SetLimitsY(0, 5);
-        plot.SavePng("f.png", 800, 600);
-        var w = FindArgMax.Compute(f, 1e-3);
-        Console.WriteLine($"w = {w}");
+        List<double> distances = new();
+        foreach (var v in data)
+        {
+            var values = v.Values.ToArray();
+            values[0] += random.NextDouble() + 1;
+            var q = new DenseVector() { Values = values };
+            var nn = set.Query(q);
+            if (nn != null)
+            {
+                var dist = nn.Value.P.DistanceTo(q);
+                distances.Add(dist);
+            }
+        }
+        Console.WriteLine($"{distances.Count}");
+        new HistogramPDF(distances).Plot("foundNN.png");
     }
 
     [Test]
@@ -62,7 +68,7 @@ public class Tests
 
         // calculate theoretically
         UnitImpulsePdf u = new() { Value = 5 };
-        var multiplied = MultiplicationPDF.CreateUnitNormal(u);
+        var multiplied = u.MultiplyWithUnitNormal();
 
         Plot plot = new();
         dataHist.Plot(plot);
@@ -88,7 +94,7 @@ public class Tests
         Console.WriteLine($"{dataHist.Bins.Length} {data.Length} {xValues.Length}");
 
         // calculate theoretically
-        var multiplied = MultiplicationPDF.CreateUnitNormal(dataHist);
+        var multiplied = dataHist.MultiplyWithUnitNormal();
 
         Plot plot = new();
         dataHist.Plot(plot);
