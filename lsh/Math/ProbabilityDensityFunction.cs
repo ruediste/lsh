@@ -4,20 +4,17 @@ namespace lsh.LshMath;
 
 public static class ProbabilityDensityFunction
 {
-    public static (HistogramPDF dNn, HistogramPDF dAny) FromDistances(DenseVector[] data)
+    public static HistogramPDF FromNnDistances(DenseVector[] data, Random random, int sampleSize = 20)
     {
-        // calculate d_any
-        var distances = new List<double>();
+        var samples = data.SampleWithoutReplacementWithIndex(sampleSize, random).ToArray();
         var minDistances = new List<double>();
-        for (int i = 0; i < data.Length; i++)
+        foreach (var sample in samples)
         {
             double minDist = double.PositiveInfinity;
             for (int j = 0; j < data.Length; j++)
             {
-                if (i == j) continue;
-                var dist = data[i].DistanceTo(data[j]);
-                if (j > i)
-                    distances.Add(dist);
+                if (sample.Index == j) continue;
+                var dist = sample.Data.DistanceTo(data[j]);
                 if (dist < minDist)
                 {
                     minDist = dist;
@@ -26,7 +23,26 @@ public static class ProbabilityDensityFunction
             minDistances.Add(minDist);
         }
 
-        return (dNn: new HistogramPDF(minDistances), dAny: new HistogramPDF(distances));
+        return new HistogramPDF(minDistances);
+    }
+
+    public static HistogramPDF FromAnyDistances(DenseVector[] data, Random random, int sampleSize = 200)
+    {
+        // calculate d_any
+        var distances = new List<double>();
+        var samples = data.SampleWithoutReplacement(sampleSize, random).ToArray();
+        for (int i = 0; i < samples.Length; i++)
+        {
+            for (int j = 0; j < samples.Length; j++)
+            {
+                if (i == j) continue;
+                var dist = data[i].DistanceTo(data[j]);
+                if (j > i)
+                    distances.Add(dist);
+            }
+        }
+
+        return new HistogramPDF(distances);
     }
 }
 

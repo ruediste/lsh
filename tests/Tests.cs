@@ -16,7 +16,7 @@ public class Tests
         Console.WriteLine($"start");
         // build test distribution
         var d = 20;
-        var N = 200;
+        var N = 2000;
         var random = new Random(0);
 
         var data = Enumerable.Range(0, N).SelectMany(_ =>
@@ -24,13 +24,12 @@ public class Tests
             var v = DenseVector.RandomUniform(d, 0, 10, random);
             return new List<DenseVector> {
                 v,
-                // v.Add(DenseVector.RandomUniform(d,0,1,random) ),
-                // v.Add(DenseVector.RandomUniform(d,0,1,random) ),
-                // v.Add(DenseVector.RandomUniform(d,0,1,random) )
+                v.Add(DenseVector.RandomUniform(d,0,1,random) ),
             };
         }).ToArray();
 
-        var (dNn, dAny) = ProbabilityDensityFunction.FromDistances(data);
+        var dNn = ProbabilityDensityFunction.FromNnDistances(data, random);
+        var dAny = ProbabilityDensityFunction.FromAnyDistances(data, random);
 
         dAny.Plot("dAny.png");
         dNn.Plot("dNn.png");

@@ -50,4 +50,40 @@ public static class MathExtensions
             action(item, index++);
         }
     }
+
+    public static IEnumerable<T> SampleWithoutReplacement<T>(this T[] values, int sampleSize, Random random)
+    => SampleWithoutReplacement(values.Length, sampleSize, random).Select(index => values[index]);
+
+    public static IEnumerable<(T Data, int Index)> SampleWithoutReplacementWithIndex<T>(this T[] values, int sampleSize, Random random)
+    => SampleWithoutReplacement(values.Length, sampleSize, random).Select(index => (values[index], index));
+
+    /// <summary>
+    /// Sample sampleSize elements e between 0<=e<populationSize
+    public static IEnumerable<int> SampleWithoutReplacement(int populationSize, int sampleSize, Random random)
+    {
+        // short circuit if there are too many samples to take
+        if (sampleSize >= populationSize)
+        {
+            for (int i = 0; i < populationSize; i++)
+                yield return i;
+            yield break;
+        }
+
+        int t = 0; // total input records dealt with
+        int m = 0; // number of items selected so far
+        while (m < sampleSize)
+        {
+            double u = random.NextDouble(); // call a uniform(0,1) random number generator
+
+            if ((populationSize - t) * u >= sampleSize - m)
+            {
+                t++;
+            }
+            else
+            {
+                yield return t;
+                t++; m++;
+            }
+        }
+    }
 }
