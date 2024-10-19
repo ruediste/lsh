@@ -1,7 +1,6 @@
-﻿using System.ComponentModel.DataAnnotations;
-using System.Diagnostics.CodeAnalysis;
-using System.Numerics;
+﻿using System.Diagnostics.CodeAnalysis;
 using lsh.LshMath;
+using MathNet.Numerics;
 
 namespace lsh;
 
@@ -26,8 +25,8 @@ public class LshSet<T>
 
         var pNn = gNn.TriangleProbability(W);
         var pAny = gAny.TriangleProbability(W);
-        var K = (long)Math.Ceiling(-Math.Log(N) / Math.Log(pAny));
-        var L = (long)Math.Ceiling(-Math.Log(delta) / Math.Pow(pNn, K));
+        var K = (int)Math.Ceiling(-Math.Log(N) / Math.Log(pAny));
+        var L = (int)Math.Ceiling(-Math.Log(delta) / Math.Pow(pNn, K));
 
         Params = new Parameters { W = W, K = K, L = L, DataDimensions = dataDimensions };
         this.Initialize();
@@ -35,8 +34,10 @@ public class LshSet<T>
 
     private class Table
     {
-        public readonly List<(DenseVector V, double B)> Vectors = [];
-        public Dictionary<long, List<(DenseVector P, T Data)>> Buckets = [];
+        // public readonly List<(Vector<double> V, double B)> Vectors = [];
+        public required Matrix<double> Vectors;
+        public required Vector<double> Bs;
+        public Dictionary<long, List<(Vector<double> P, T Data)>> Buckets = [];
     }
 
     private readonly List<Table> Tables = [];
@@ -46,16 +47,18 @@ public class LshSet<T>
         var random = new Random(0);
         for (int i = 0; i < Params.L; i++)
         {
-            var table = new Table();
-            for (int j = 0; j < Params.K; j++)
+
+            Tables.Add(new Table()
             {
-                table.Vectors.Add((DenseVector.RandomNormal(Params.DataDimensions, random), random.NextDouble() * Params.W));
-            }
-            Tables.Add(table);
+                Vectors = Matrix<double>.Build.Dense(Params.K, Params.DataDimensions, (i, j) => random.NextGaussian()),
+                Bs = Vector<double>.Build.DenseOfEnumerable(Generate.UniformSequence().Take(Params.K))
+            });
         }
     }
 
-    public void Add(DenseVector p, T data)
+
+
+    public void Add(Vector<double> p, T data)
     {
         Tables.ForEach(t =>
         {
@@ -64,15 +67,15 @@ public class LshSet<T>
         });
     }
 
-    private long CalculateBucket(DenseVector p, Table t) => t.Vectors.Select(v => (long)Math.Floor((v.V.Dot(p) + v.B) / Params.W)).GetSequenceHashCode();
+    private long CalculateBucket(Vector<double> p, Table t) => ((t.Vectors * p + t.Bs) / Params.W).PointwiseFloor().GetSequenceHashCode();
 
-    public (DenseVector P, T Data)? Query(DenseVector q)
+    public (Vector<double> P, T Data)? Query(Vector<double> q)
     {
         var min = Tables.Select(t =>
         {
             long bucket = CalculateBucket(q, t);
-            return t.Buckets.GetValueOrDefault(bucket)?.MinBy(entry => entry.P.DistanceTo(q));
-        }).Where(x => x != null).MinBy(entry => entry!.Value.P.DistanceTo(q));
+            return t.Buckets.GetValueOrDefault(bucket)?.MinBy(entry => (entry.P - q).L2Norm());
+        }).Where(x => x != null).MinBy(entry => (entry!.Value.P - q).L2Norm());
         return min;
     }
 
@@ -83,8 +86,8 @@ public class LshSet<T>
     public record Parameters
     {
         public required double W { get; init; }
-        public required long K { get; init; }
-        public required long L { get; init; }
+        public required int K { get; init; }
+        public required int L { get; init; }
 
         public required int DataDimensions { get; init; }
     }

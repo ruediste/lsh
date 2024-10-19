@@ -4,7 +4,7 @@ namespace lsh.LshMath;
 
 public static class ProbabilityDensityFunction
 {
-    public static HistogramPDF FromNnDistances(DenseVector[] data, Random random, int sampleSize = 20)
+    public static HistogramPDF FromNnDistances(Vector<double>[] data, Random random, int sampleSize = 20)
     {
         var samples = data.SampleWithoutReplacementWithIndex(sampleSize, random).ToArray();
         var minDistances = new List<double>();
@@ -14,7 +14,7 @@ public static class ProbabilityDensityFunction
             for (int j = 0; j < data.Length; j++)
             {
                 if (sample.Index == j) continue;
-                var dist = sample.Data.DistanceTo(data[j]);
+                var dist = (sample.Data - data[j]).L2Norm();
                 if (dist < minDist)
                 {
                     minDist = dist;
@@ -26,7 +26,7 @@ public static class ProbabilityDensityFunction
         return new HistogramPDF(minDistances);
     }
 
-    public static HistogramPDF FromAnyDistances(DenseVector[] data, Random random, int sampleSize = 200)
+    public static HistogramPDF FromAnyDistances(Vector<double>[] data, Random random, int sampleSize = 200)
     {
         // calculate d_any
         var distances = new List<double>();
@@ -36,7 +36,7 @@ public static class ProbabilityDensityFunction
             for (int j = 0; j < samples.Length; j++)
             {
                 if (i == j) continue;
-                var dist = data[i].DistanceTo(data[j]);
+                var dist = (data[i] - data[j]).L2Norm();
                 if (j > i)
                     distances.Add(dist);
             }

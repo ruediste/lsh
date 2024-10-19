@@ -1,59 +1,74 @@
-using System.Security.Cryptography;
-using System.Security.Cryptography.X509Certificates;
+using System.Diagnostics;
 using lsh;
 using lsh.LshMath;
+using MathNet.Numerics;
 using ScottPlot;
-using ScottPlot.DataSources;
 
 namespace tests;
 
 public class Tests
 {
 
+    [OneTimeSetUp]
+    public void Setup()
+    {
+        Control.NativeProviderPath = ".";
+        Control.UseNativeMKL();
+    }
+
     [Test]
     public void OverallAlgo()
     {
         Console.WriteLine($"start");
         // build test distribution
-        var d = 20;
-        var N = 2000;
+        var d = 100;
+        var N = 20000;
         var random = new Random(0);
 
         var data = Enumerable.Range(0, N).SelectMany(_ =>
         {
-            var v = DenseVector.RandomUniform(d, 0, 10, random);
-            return new List<DenseVector> {
+            var v = RandomVectors.RandomUniform(d, 0, 10, random);
+            return new List<Vector<double>> {
                 v,
-                v.Add(DenseVector.RandomUniform(d,0,1,random) ),
+                v.Add(RandomVectors.RandomUniform(d,0,1,random) ),
             };
         }).ToArray();
 
+        var watch = new Stopwatch();
+        watch.Start();
         var dNn = ProbabilityDensityFunction.FromNnDistances(data, random);
+        Console.WriteLine($"build nn dist: {watch.ElapsedMilliseconds} ms");
+
+        watch.Restart();
         var dAny = ProbabilityDensityFunction.FromAnyDistances(data, random);
+        Console.WriteLine($"build any dist: {watch.ElapsedMilliseconds} ms");
 
         dAny.Plot("dAny.png");
         dNn.Plot("dNn.png");
 
         var set = new LshSet<int>(data.Length, d, 0.1, /*dNn*/ new UnitImpulsePdf() { Value = 2 }, dAny);
         Console.WriteLine(set);
+        return;
 
         // testing the algorithm
+        watch.Restart();
         data.ForEach((v, i) => set.Add(v, i));
+        Console.WriteLine($"Index Data: {watch.ElapsedMilliseconds} ms");
 
+        watch.Restart();
         List<double> distances = new();
         foreach (var v in data)
         {
-            var values = v.Values.ToArray();
-            values[0] += random.NextDouble() + 1;
-            var q = new DenseVector() { Values = values };
+            var q = v.Clone();
+            q[0] += random.NextDouble() + 1;
             var nn = set.Query(q);
             if (nn != null)
             {
-                var dist = nn.Value.P.DistanceTo(q);
+                var dist = (nn.Value.P - q).L2Norm();
                 distances.Add(dist);
             }
         }
-        Console.WriteLine($"{distances.Count}");
+        Console.WriteLine($"Query Data: {watch.ElapsedMilliseconds} ms");
         new HistogramPDF(distances).Plot("foundNN.png");
     }
 
