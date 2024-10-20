@@ -51,14 +51,14 @@ Thus $Z\sim N(0,v^2)$.
 
 #### Histogram PDF
 
-We can treat a histogram PDF as a sum of impulses. With $n$ bins and $B_i$ and $C_i$ as the probability and center of bin $i$ respectively, we get
+We can treat a histogram PDF as a sum of impulses. With $n$ bins, a bin width of $w_B$ and $B_i$ and $C_i$ as the probability and center of bin $i$ respectively, we get
 
 $$
 \begin{align}
-f_Z(z) &= \sum_{i=1}^n\int^\infty_{-\infty} B_i \delta(z-C_i)  f_N( z/x)  \frac{1}{|x|}\, dx\\
-&=  \sum_{i=1}^n B_i\int^\infty_{-\infty} \delta(z-C_i)  f_N( z/x)  \frac{1}{|x|}\, dx\\
-&=  \sum_{i=1}^n B_if_N(z/C_i)\frac{1}{|C_i|}\\
-&=  \sum_{i=1}^n B_if_N(z|0,C_i^2)\\
+f_Z(z) &= \sum_{i=1}^n\int^\infty_{-\infty} B_iw_B \delta(z-C_i)  f_N( z/x)  \frac{1}{|x|}\, dx\\
+&=\sum_{i=1}^n B_iw_B\int^\infty_{-\infty} \delta(z-C_i)  f_N( z/x)  \frac{1}{|x|}\, dx\\
+&=\sum_{i=1}^n B_iw_Bf_N(z/C_i)\frac{1}{|C_i|}\\
+&=\sum_{i=1}^n B_iw_Bf_N(z|0,C_i^2)\\
 \end{align}
 $$
 
@@ -105,7 +105,7 @@ In our case, $\mu_0$ and $\mu_1$ are both zero, thus $\sigma^2= p\sigma^2_1+(1âˆ
 
 $$
 \begin{align}
-f_Z(z)&=  \sum_{i=1}^n B_if_N(z|0,C_i^2)\\
-&=  f_N(z|0,\sum_{i=1}^n (B_iC_i^2))\\
+f_Z(z)&=  \sum_{i=1}^n B_iw_Bf_N(z|0,C_i^2)\\
+&=  f_N(z|0,\sum_{i=1}^n (B_iw_BC_i^2))\\
 \end{align}
 $$

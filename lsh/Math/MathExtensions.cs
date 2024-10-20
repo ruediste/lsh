@@ -26,6 +26,15 @@ public static class MathExtensions
                 (current * 31) + (item?.GetHashCode() ?? 0));
         }
     }
+    public static long GetSequenceHashCode(this IEnumerable<double> sequence)
+    {
+        long result = 487;
+        foreach (var item in sequence)
+        {
+            result = (result * 31) + BitConverter.DoubleToInt64Bits(item);
+        }
+        return result;
+    }
 
     public static TValue ComputeIfAbsent<TKey, TValue>(this Dictionary<TKey, TValue> dict, TKey key, Func<TValue> valueFactory)
     where TKey : notnull

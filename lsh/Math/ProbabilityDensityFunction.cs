@@ -1,48 +1,95 @@
+using System.Runtime.Intrinsics;
+using System.Runtime.Intrinsics.X86;
 using ScottPlot;
+using ScottPlot.DataSources;
 
 namespace lsh.LshMath;
 
 public static class ProbabilityDensityFunction
 {
-    public static HistogramPDF FromNnDistances(Vector<double>[] data, Random random, int sampleSize = 20)
+    public static bool UseAvx()
+    {
+        // return false;
+        return Avx2.IsSupported;
+    }
+    public unsafe static HistogramPDF FromNnDistances(int dataDimensions, Vector<double>[] data, Random random, int sampleSize = 20)
     {
         var samples = data.SampleWithoutReplacementWithIndex(sampleSize, random).ToArray();
+        return CalculateHistogram(dataDimensions, data, samples.Select(x => x.Data).ToArray(), (dataIndex, sampleIndex) => dataIndex != samples[sampleIndex].Index);
+    }
+
+    public static HistogramPDF FromAnyDistances(int dataDimensions, Vector<double>[] data, Random random, int sampleSize = 200)
+    {
+        var samples = data.SampleWithoutReplacement(sampleSize, random).ToArray();
+        return CalculateHistogram(dataDimensions, samples, samples, (dataIndex, sampleIndex) => dataIndex != sampleIndex);
+    }
+
+    private static unsafe HistogramPDF CalculateHistogram(int dataDimensions, Vector<double>[] data, Vector<double>[] samples, Func<int, int, bool> filter)
+    {
         var minDistances = new List<double>();
-        foreach (var sample in samples)
+        if (UseAvx())
         {
-            double minDist = double.PositiveInfinity;
-            for (int j = 0; j < data.Length; j++)
+            // fill data
+            using var pData = new NativeMemoryWrapper<double>(data.Length * dataDimensions, 32);
+            for (int i = 0; i < data.Length; i++)
+                for (int j = 0; j < dataDimensions; j++)
+                    pData[(i * dataDimensions) + j] = data[i][j];
+
+            for (int sampleIndex = 0; sampleIndex < samples.Length; sampleIndex++)
             {
-                if (sample.Index == j) continue;
-                var dist = (sample.Data - data[j]).L2Norm();
-                if (dist < minDist)
+                // sample
+                var sample = samples[sampleIndex];
+                using var pSample = new NativeMemoryWrapper<double>(dataDimensions, 32);
+                var sampleArray = sample.ToArray();
+                for (int i = 0; i < sampleArray.Length; i++)
+                    pSample[i] = sampleArray[i];
+
+                double minDist = double.PositiveInfinity;
+
+                for (int j = 0; j < data.Length; j++)
                 {
-                    minDist = dist;
+                    if (!filter(j, sampleIndex)) continue;
+                    var pCurrentData = pData + j * dataDimensions;
+                    Vector256<double> acc = Vector256<double>.Zero;
+                    for (int i = 0; i < dataDimensions; i += 4)
+                    {
+                        var diff = Avx2.Subtract(Avx2.LoadAlignedVector256(pCurrentData + i), Avx2.LoadAlignedVector256(pSample + i));
+                        acc = Avx2.Add(acc, Avx2.Multiply(diff, diff));
+                    }
+
+                    // build sum of accumulator values
+                    double sum = 0;
+                    for (int i = 0; i < 4; i++)
+                        sum += acc[i];
+                    var dist = Math.Sqrt(sum);
+                    if (dist < minDist)
+                    {
+                        minDist = dist;
+                    }
                 }
+                minDistances.Add(minDist);
             }
-            minDistances.Add(minDist);
+        }
+        else
+        {
+            for (int sampleIndex = 0; sampleIndex < samples.Length; sampleIndex++)
+            {
+                var sample = samples[sampleIndex];
+                double minDist = double.PositiveInfinity;
+                for (int j = 0; j < data.Length; j++)
+                {
+                    if (!filter(j, sampleIndex)) continue;
+                    var dist = (sample - data[j]).L2Norm();
+                    if (dist < minDist)
+                    {
+                        minDist = dist;
+                    }
+                }
+                minDistances.Add(minDist);
+            }
         }
 
         return new HistogramPDF(minDistances);
-    }
-
-    public static HistogramPDF FromAnyDistances(Vector<double>[] data, Random random, int sampleSize = 200)
-    {
-        // calculate d_any
-        var distances = new List<double>();
-        var samples = data.SampleWithoutReplacement(sampleSize, random).ToArray();
-        for (int i = 0; i < samples.Length; i++)
-        {
-            for (int j = 0; j < samples.Length; j++)
-            {
-                if (i == j) continue;
-                var dist = (data[i] - data[j]).L2Norm();
-                if (j > i)
-                    distances.Add(dist);
-            }
-        }
-
-        return new HistogramPDF(distances);
     }
 }
 
@@ -79,6 +126,13 @@ public class GaussianPDF
             x += step;
         }
         return result;
+    }
+
+    public void Plot(Plot plot)
+    {
+        plot.Add.Function(x => Probability(x));
+        plot.Axes.SetLimitsX(Mean - 4 * StandardDeviation, Mean + 4 * StandardDeviation);
+        plot.Axes.SetLimitsY(0, 1.2 / Math.Sqrt(2 * Math.PI * StandardDeviation * StandardDeviation));
     }
 
     public override string ToString()
@@ -158,6 +212,6 @@ public class HistogramPDF : InputDataProbabilityDistribution
     }
 
     public GaussianPDF MultiplyWithUnitNormal()
-    => new GaussianPDF() { StandardDeviation = Math.Sqrt(Probabilities.Select(x => x.Probability * x.Center * x.Center).Sum()) };
+    => new GaussianPDF() { StandardDeviation = Math.Sqrt(BinWidth * Probabilities.Select(x => x.Probability * x.Center * x.Center).Sum()) };
 
 }
