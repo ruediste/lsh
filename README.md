@@ -18,7 +18,7 @@ LSH assigns points to buckets in such a way that points which lie close together
 - During lookup, multiple buckets are very likely identified, and all of them have to be searched
 - The parameters are chosen in such a way, that few points end up in the same bucket. However, if the data is not distributed evenly, many points may end up in the same bucket. Therefore it is important to implement the buckets in such a way tha they can handle this
 
-These concepts are reflected in the API. The `LSHIndex` class only handles the mapping between points and bucket IDs. How data is added to buckets and how buckets are queried is handled by the bucket itself, and different bucket implementations may be used.
+These concepts are reflected in the API. The `LSHIndex` class only handles the mapping between points and bucket IDs. How data is represented in buckets is handled by the caller. This allows for maximal flexibility.
 
 The `BucketStorage` is responsible for storing the buckets.
 

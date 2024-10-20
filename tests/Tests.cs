@@ -45,7 +45,7 @@ public class Tests
         dAny.Plot("dAny.png");
         dNn.Plot("dNn.png");
 
-        var set = new ListLshSet<int>(LshParameters.Calculate(data.Length, d, 0.1, dNn, dAny));
+        var set = new ListLshSet<int>(LshParameters.Calculate(data.Length, d, 0.01, dNn, dAny));
         Console.WriteLine(set.Index.Params);
 
         // testing the algorithm
@@ -58,17 +58,17 @@ public class Tests
         List<double> distances = new();
         foreach (var v in data)
         {
-            var q = v.Clone();
-            q[0] += random.NextDouble() + 1;
-            var nn = set.Query(q);
+            var nn = set.Query(v, (p, data) => !p.Equals(v));
             if (nn != null)
             {
-                var dist = (nn.Value.P - q).L2Norm();
+                var dist = (nn.Value.P - v).L2Norm();
                 distances.Add(dist);
             }
         }
         Console.WriteLine($"Query Data: {watch.ElapsedMilliseconds} ms");
-        new HistogramPDF(distances).Plot("foundNN.png");
+        new HistogramPDF(distances.Where(x => x < 50)).Plot("foundNN.png");
+        double threshold = 7;
+        Console.WriteLine($"Distance fraction above {threshold}: {distances.Where(x => x > threshold).Count() / (double)distances.Count}");
     }
 
     [Test]

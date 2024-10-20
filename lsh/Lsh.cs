@@ -183,7 +183,7 @@ public class DictionaryBucketStorage<TBucket>(Func<TBucket> bucketFactory) : Buc
 public interface LshSet<T>
 {
     public void Add(Vector<double> p, T data);
-    public (Vector<double> P, T Data)? Query(Vector<double> q);
+    public (Vector<double> P, T Data)? Query(Vector<double> q, Func<Vector<double>, T, bool>? filter = null);
 }
 
 public class ListLshSet<T> : LshSet<T>
@@ -202,8 +202,25 @@ public class ListLshSet<T> : LshSet<T>
 
     public void Add(Vector<double> p, T data) => Index.Add(p, b => b.Add((p, data)));
 
-    public (Vector<double> P, T Data)? Query(Vector<double> q)
-    => Index.Query(q).Where(b => b.Count > 0).Select(b => b.MinBy(e => (e.P - q).L2Norm())).MinBy(e => (e.P - q).L2Norm());
+    public (Vector<double> P, T Data)? Query(Vector<double> q, Func<Vector<double>, T, bool>? filter = null)
+    {
+        (Vector<double> P, T Data)? result = null;
+        double? minDistance = null;
+        foreach (var bucket in Index.Query(q))
+        {
+            foreach (var entry in bucket.Where(entry => filter == null || filter(entry.P, entry.Data)))
+            {
+                var distance = (entry.P - q).L2Norm();
+                if (result == null || minDistance == null || distance < minDistance)
+                {
+                    result = entry;
+                    minDistance = distance;
+                }
+            }
+
+        }
+        return result;
+    }
 
     public IEnumerable<int> BucketSizes => Index.Storage.Buckets.Select(b => b.Count);
 }
