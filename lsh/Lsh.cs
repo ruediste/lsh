@@ -3,52 +3,22 @@ using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
 using lsh.LshMath;
 using MathNet.Numerics;
+using MathNet.Numerics.Statistics;
 
 namespace lsh;
 
-public class LshSet<T> : IDisposable
+public class LshIndex<TBucket> : IDisposable
 {
-    public Parameters Params { get; private init; }
-
-    [SetsRequiredMembers]
-    public LshSet(Parameters parameters)
-    {
-        Params = parameters;
-        this.Initialize();
-    }
-
-    [SetsRequiredMembers]
-    public LshSet(long N, int dataDimensions, double delta, InputDataProbabilityDistribution dNn, InputDataProbabilityDistribution dAny)
-    {
-        var gNn = dNn.MultiplyWithUnitNormal();
-        var gAny = dAny.MultiplyWithUnitNormal();
-
-        Console.WriteLine($"gnn:{gNn} gany:{gAny}");
-        var W = FindArgMax.Compute(x => Math.Log(gAny.TriangleProbability(x)) / Math.Log(gNn.TriangleProbability(x)), 1e-3);
-        var pNn = gNn.TriangleProbability(W);
-        var pAny = gAny.TriangleProbability(W);
-        Console.WriteLine($"pnn: {pNn} pAny: {pAny}");
-        var K = (int)Math.Ceiling(-Math.Log(N) / Math.Log(pAny));
-        var L = (int)Math.Ceiling(-Math.Log(delta) / Math.Pow(pNn, K));
-
-        Params = new Parameters { W = W, K = K, L = L, DataDimensions = dataDimensions };
-        this.Initialize();
-    }
-
-    private class Table
-    {
-        // public readonly List<(Vector<double> V, double B)> Vectors = [];
-        public required Matrix<double> Vectors;
-        public required NativeMemoryWrapper<double> Vectors2;
-        public required Vector<double> Bs;
-        public required double[] Bs2;
-        public Dictionary<long, List<(Vector<double> P, T Data)>> Buckets = [];
-    }
+    public LshParameters Params { get; private init; }
+    public readonly BucketStorage<TBucket> Storage;
 
     private readonly List<Table> Tables = [];
 
-    private void Initialize()
+    [SetsRequiredMembers]
+    public LshIndex(LshParameters parameters, BucketStorage<TBucket> bucketStorage)
     {
+        Params = parameters;
+        this.Storage = bucketStorage;
         var random = new Random(0);
         for (int i = 0; i < Params.L; i++)
         {
@@ -66,20 +36,55 @@ public class LshSet<T> : IDisposable
             {
                 Vectors = Matrix<double>.Build.Dense(Params.K, Params.DataDimensions, (i, j) => Vectors[(i * Params.DataDimensions) + j]),
                 Bs = Vector<double>.Build.Dense(Params.K, i => bs[i]),
-                Vectors2 = Vectors,
-                Bs2 = bs
+                VectorsAvx = Vectors,
+                BsAvx = bs
             });
         }
     }
 
-    public void Add(Vector<double> p, T data)
+
+
+    private class Table
     {
-        Tables.ForEach(t =>
-        {
-            long bucket = CalculateBucket(p, t);
-            t.Buckets.ComputeIfAbsent(bucket, () => []).Add((p, data));
-        });
+        // public readonly List<(Vector<double> V, double B)> Vectors = [];
+        public required Matrix<double> Vectors;
+        public required NativeMemoryWrapper<double> VectorsAvx;
+        public required Vector<double> Bs;
+        public required double[] BsAvx;
     }
+
+
+    /// <summary>
+    /// Add a point to this set
+    /// </summary>
+    /// <param name="p">Point to add to the set</param>
+    /// <param name="bucketFactory"> Factory to create new empty buckets </param>
+    /// <param name="addToBucket" >Function to add the point to a bucket</param>
+    public void Add(Vector<double> p, Action<TBucket> addToBucket)
+    {
+        for (int i = 0; i < Tables.Count; i++)
+        {
+            addToBucket(Storage.GetOrCreate(i, CalculateBucket(p, Tables[i])));
+        }
+    }
+
+    /// <summary>
+    /// Find all buckets matching the given query vector
+    /// </summery>
+    public List<TBucket> Query(Vector<double> q)
+    {
+        List<TBucket> buckets = new();
+        for (int i = 0; i < Tables.Count; i++)
+        {
+            var bucket = Storage.Get(i, CalculateBucket(q, Tables[i]));
+            if (bucket != null)
+            {
+                buckets.Add(bucket);
+            }
+        }
+        return buckets;
+    }
+
     private long CalculateBucket(Vector<double> p, Table t) => !Avx2.IsSupported || Params.DataDimensions < 500 ? CalculateBucketMathnet(p, t) : CalculateBucketAvx(p, t);
     private long CalculateBucketMathnet(Vector<double> p, Table t) => ((t.Vectors * p + t.Bs) / Params.W).PointwiseFloor().GetSequenceHashCode();
     private unsafe long CalculateBucketAvx(Vector<double> p, Table table)
@@ -91,7 +96,7 @@ public class LshSet<T> : IDisposable
         p.ToArray().CopyTo(new Span<double>(pMem.Data, Params.DataDimensions));
 
         var results = new List<double>();
-        double* pTable = table.Vectors2;
+        double* pTable = table.VectorsAvx;
         for (int i = 0; i < Params.K; i++)
         {
             Vector256<double> acc = Vector256<double>.Zero;
@@ -108,22 +113,10 @@ public class LshSet<T> : IDisposable
                 sum += acc[j];
 
 
-            results.Add(Math.Floor((sum + table.Bs2[i]) / Params.W));
+            results.Add(Math.Floor((sum + table.BsAvx[i]) / Params.W));
         }
 
         return results.GetSequenceHashCode();
-    }
-
-    public IEnumerable<int> BucketSizes => this.Tables.SelectMany(t => t.Buckets.Select(b => b.Value.Count));
-
-    public (Vector<double> P, T Data)? Query(Vector<double> q)
-    {
-        var min = Tables.Select(t =>
-        {
-            long bucket = CalculateBucket(q, t);
-            return t.Buckets.GetValueOrDefault(bucket)?.MinBy(entry => (entry.P - q).L2Norm());
-        }).Where(x => x != null).MinBy(entry => (entry!.Value.P - q).L2Norm());
-        return min;
     }
 
     public override string ToString()
@@ -134,17 +127,83 @@ public class LshSet<T> : IDisposable
     {
         if (!disposed)
         {
-            Tables.ForEach(t => t.Vectors2.Dispose());
+            Tables.ForEach(t => t.VectorsAvx.Dispose());
             disposed = true;
         }
     }
+}
 
-    public record Parameters
+public record LshParameters
+{
+    public required double W { get; init; }
+    public required int K { get; init; }
+    public required int L { get; init; }
+
+    public required int DataDimensions { get; init; }
+
+    public static LshParameters Calculate(long N, int dataDimensions, double delta, InputDataProbabilityDistribution dNn, InputDataProbabilityDistribution dAny)
     {
-        public required double W { get; init; }
-        public required int K { get; init; }
-        public required int L { get; init; }
+        var gNn = dNn.MultiplyWithUnitNormal();
+        var gAny = dAny.MultiplyWithUnitNormal();
 
-        public required int DataDimensions { get; init; }
+        var W = FindArgMax.Compute(x => Math.Log(gAny.TriangleProbability(x)) / Math.Log(gNn.TriangleProbability(x)), 1e-3);
+
+        var pNn = gNn.TriangleProbability(W);
+        var pAny = gAny.TriangleProbability(W);
+        var K = (int)Math.Ceiling(-Math.Log(N) / Math.Log(pAny));
+        var L = (int)Math.Ceiling(-Math.Log(delta) / Math.Pow(pNn, K));
+        return new LshParameters { W = W, K = K, L = L, DataDimensions = dataDimensions };
     }
+
+
+    public override string ToString()
+    => $"(W: {W}, K: {K}, L: {L})";
+}
+
+public interface BucketStorage<TBucket>
+{
+    TBucket GetOrCreate(int tableId, long bucketId);
+    TBucket? Get(int tableId, long bucketId);
+
+    IEnumerable<TBucket> Buckets { get; }
+}
+
+public class DictionaryBucketStorage<TBucket>(Func<TBucket> bucketFactory) : BucketStorage<TBucket>
+{
+    private readonly Dictionary<(int TableId, long BucketId), TBucket> buckets = [];
+    public TBucket? Get(int tableId, long bucketId)
+    => buckets.TryGetValue((tableId, bucketId), out var bucket) ? bucket : default;
+
+    public TBucket GetOrCreate(int tableId, long bucketId)
+    => buckets.ComputeIfAbsent((tableId, bucketId), bucketFactory);
+
+    public IEnumerable<TBucket> Buckets => buckets.Values;
+}
+
+public interface LshSet<T>
+{
+    public void Add(Vector<double> p, T data);
+    public (Vector<double> P, T Data)? Query(Vector<double> q);
+}
+
+public class ListLshSet<T> : LshSet<T>
+{
+    public readonly LshIndex<List<(Vector<double> P, T Data)>> Index;
+
+    public ListLshSet(LshParameters lshParams)
+    : this(lshParams, new DictionaryBucketStorage<List<(Vector<double> P, T Data)>>(() => []))
+    {
+    }
+
+    public ListLshSet(LshParameters lshParams, BucketStorage<List<(Vector<double> P, T Data)>> storage)
+    {
+        Index = new LshIndex<List<(Vector<double> P, T Data)>>(lshParams, storage);
+    }
+
+    public void Add(Vector<double> p, T data) => Index.Add(p, b => b.Add((p, data)));
+
+    public (Vector<double> P, T Data)? Query(Vector<double> q)
+    => Index.Query(q).Where(b => b.Count > 0).Select(b => b.MinBy(e => (e.P - q).L2Norm())).MinBy(e => (e.P - q).L2Norm());
+
+    public IEnumerable<int> BucketSizes => Index.Storage.Buckets.Select(b => b.Count);
 }

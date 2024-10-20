@@ -1,10 +1,30 @@
 # Locality Sensitive Hashing
 
-While the LSH algorithm is relatively simple, determining the parameters for it is tricky. This library contains both an implementation of LSH and the utilities to determine the optimal parameters, based on [Slaney2012](<Slaney2012(OptimalLSH).pdf>).
+Locality Sensitive Hashing (LSH) is a powerful technique for efficiently approximating nearest neighbor searches in high-dimensional spaces. This library provides an optimized implementation of LSH, enabling fast similarity searches across large datasets. By hashing similar input items into the same "buckets" with high probability, LSH significantly reduces the computational cost associated with traditional search methods.
+
+Key Features
+
+- **Euclidean Distance:** Many LSH implementations use cosine or jaccard distance. This library uses euclidean distance, which is better or even required for many use cases.
+- **Optimal Parameter Selection:** Automatically determines the best parameters for LSH based on the characteristics of your data, ensuring high performance and accuracy.
+- **Flexible Design:** Custom bucket implementations and bucket storage implementations allow flexible adaption to the use case at hand.
+
+While the LSH algorithm itself is relatively simple, determining the parameters for it is tricky. This library contains both an implementation of LSH and the utilities to determine the optimal parameters, based on [Slaney2012](<Slaney2012(OptimalLSH).pdf>).
+
+## Usage
+
+LSH assigns points to buckets in such a way that points which lie close together have a higher probability to end up in the same bucket as points which are further away. However, even points which lie very close together may up in different buckets. To reduce the probability of not finding nearby points, the indexing and lookup process is repeated multiple times. This has the following consequences:
+
+- During indexing, each point is placed in multiple buckets
+- During lookup, multiple buckets are very likely identified, and all of them have to be searched
+- The parameters are chosen in such a way, that few points end up in the same bucket. However, if the data is not distributed evenly, many points may end up in the same bucket. Therefore it is important to implement the buckets in such a way tha they can handle this
+
+These concepts are reflected in the API. The `LSHIndex` class only handles the mapping between points and bucket IDs. How data is added to buckets and how buckets are queried is handled by the bucket itself, and different bucket implementations may be used.
+
+The `BucketStorage` is responsible for storing the buckets.
 
 ## Implementation Style
 
-While care is taken to properly model the mathematical concepts, generalization is kept to a minimum and only the required functionality is implemented. This keeps the code base small and easy to understand. The concepts are documented in this readme instead of the code, due to the superior markup capabilities of Markdown.
+While care is taken to properly model the mathematical concepts, generalization is kept to a minimum and only the required functionality is implemented. This keeps the code base small and easy to understand. The mathematical concepts are documented in this readme instead of the code, due to the superior markup capabilities of Markdown.
 
 ## Mathematical Concepts
 

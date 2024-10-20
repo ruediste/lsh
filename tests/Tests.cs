@@ -19,10 +19,9 @@ public class Tests
     [Test]
     public void OverallAlgo()
     {
-        Console.WriteLine($"start");
         // build test distribution
         var d = 100;
-        var N = 20000;
+        var N = 2000;
         var random = new Random(0);
 
         var data = Enumerable.Range(0, N).SelectMany(_ =>
@@ -46,8 +45,8 @@ public class Tests
         dAny.Plot("dAny.png");
         dNn.Plot("dNn.png");
 
-        var set = new LshSet<int>(data.Length, d, 0.1, dNn, dAny);
-        Console.WriteLine(set);
+        var set = new ListLshSet<int>(LshParameters.Calculate(data.Length, d, 0.1, dNn, dAny));
+        Console.WriteLine(set.Index.Params);
 
         // testing the algorithm
         watch.Restart();

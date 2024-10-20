@@ -13,19 +13,6 @@ public static class MathExtensions
                      Math.Sin(2.0 * Math.PI * u2); //random normal(0,1)
     }
 
-    public static double NextGaussian(this Random rand, double mean, double stdDev)
-    {
-        return rand.NextGaussian() * stdDev + mean;
-    }
-
-    public static long GetSequenceHashCode<T>(this IEnumerable<T> sequence)
-    {
-        unchecked
-        {
-            return sequence.Aggregate(487L, (current, item) =>
-                (current * 31) + (item?.GetHashCode() ?? 0));
-        }
-    }
     public static long GetSequenceHashCode(this IEnumerable<double> sequence)
     {
         long result = 487;
@@ -68,6 +55,7 @@ public static class MathExtensions
 
     /// <summary>
     /// Sample sampleSize elements e between 0<=e<populationSize
+    /// </summary>
     public static IEnumerable<int> SampleWithoutReplacement(int populationSize, int sampleSize, Random random)
     {
         // short circuit if there are too many samples to take
@@ -94,10 +82,5 @@ public static class MathExtensions
                 t++; m++;
             }
         }
-    }
-    public static IEnumerable<T> Generate<T>(Func<T> generator)
-    {
-        while (true)
-            yield return generator.Invoke();
     }
 }
