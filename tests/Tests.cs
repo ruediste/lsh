@@ -2,6 +2,7 @@ using System.Diagnostics;
 using lsh;
 using lsh.LshMath;
 using MathNet.Numerics;
+using MathNet.Numerics.Statistics;
 using ScottPlot;
 
 namespace tests;
@@ -17,20 +18,17 @@ public class Tests
     }
 
     [Test]
-    public void OverallAlgo()
+    public void NearestNeighborSearch()
     {
         // build test distribution
-        var d = 100;
-        var N = 2000;
         var random = new Random(0);
 
+        var d = 100;
+        var N = 2000;
         var data = Enumerable.Range(0, N).SelectMany(_ =>
         {
             var v = RandomVectors.RandomUniform(d, 0, 20, random);
-            return new List<Vector<double>> {
-                v,
-                v.Add(RandomVectors.RandomUniform(d,0,1,random) ),
-            };
+            return (Vector<double>[])[v, v.Add(RandomVectors.RandomUniform(d, 0, 1, random))];
         }).ToArray();
 
         var watch = new Stopwatch();
@@ -42,33 +40,78 @@ public class Tests
         var dAny = ProbabilityDensityFunction.FromAnyDistances(d, data, random);
         Console.WriteLine($"build any dist: {watch.ElapsedMilliseconds} ms");
 
-        dAny.Plot("dAny.png");
-        dNn.Plot("dNn.png");
+        dAny.Plot("dAny.svg");
+        dNn.Plot("dNn.svg");
 
-        var set = new ListLshSet<int>(LshParameters.Calculate(data.Length, d, 0.01, dNn, dAny));
+        var set = new ListLshSet<int>(LshParameters.Calculate(data.Length, d, 0.1, dNn, dAny));
         Console.WriteLine(set.Index.Params);
 
         // testing the algorithm
         watch.Restart();
         data.ForEach((v, i) => set.Add(v, i));
         Console.WriteLine($"Index Data: {watch.ElapsedMilliseconds} ms");
-        new HistogramPDF(set.BucketSizes.Select(x => (double)x)).Plot("bucketSizes.png");
+        new HistogramPDF(set.BucketSizes.Select(x => (double)x)).Plot("bucketSizes.svg");
 
         watch.Restart();
-        List<double> distances = new();
-        foreach (var v in data)
+        List<double> foundNNDistances = new();
+        data.ForEach((v, indexV) =>
         {
-            var nn = set.Query(v, (p, data) => !p.Equals(v));
+            var nn = set.Query(v, (p, indexP) => indexV != indexP);
             if (nn != null)
             {
                 var dist = (nn.Value.P - v).L2Norm();
-                distances.Add(dist);
+                foundNNDistances.Add(dist);
             }
-        }
+        });
         Console.WriteLine($"Query Data: {watch.ElapsedMilliseconds} ms");
-        new HistogramPDF(distances.Where(x => x < 50)).Plot("foundNN.png");
+        new HistogramPDF(foundNNDistances.Where(x => x < 50)).Plot("foundNN.svg");
         double threshold = 7;
-        Console.WriteLine($"Distance fraction above {threshold}: {distances.Where(x => x > threshold).Count() / (double)distances.Count}");
+        Console.WriteLine($"Distance fraction above {threshold}: {foundNNDistances.Where(x => x > threshold).Count() / (double)foundNNDistances.Count}");
+    }
+
+    [Test]
+    public void QueryPointDistanceDistribution()
+    {
+        // build test distribution
+        var random = new Random(0);
+
+        var d = 100;
+        var N = 2000;
+        var data = Enumerable.Range(0, N).Select(_ => RandomVectors.RandomUniform(d, 0, 20, random)).ToArray();
+
+        var dAny = ProbabilityDensityFunction.FromAnyDistances(d, data, random);
+        Plot plot = new();
+
+        foreach (var pulseValue in (double[])[5, 15, 30, 50, 70])
+        {
+            var set = new ListLshSet<int>(LshParameters.Calculate(data.Length, d, 0.1, ProbabilityDensityFunction.FromUnitImpulse(pulseValue), dAny));
+
+            data.ForEach(set.Add);
+
+            List<(double dist, double hitRate)> hitRates = [];
+            for (double distance = 1; distance < 100; distance = distance * 1.2 + 1)
+            {
+
+                long found = 0;
+                int sampleSize = 200;
+                data.Take(sampleSize).ForEach((v, indexV) =>
+                {
+                    var nn = set.Query(v + RandomVectors.RandomGivenLength(d, distance, random));
+                    if (nn != null && nn.Value.Data == indexV)
+                    {
+                        found++;
+                    }
+                });
+                hitRates.Add((distance, (double)found / sampleSize));
+            }
+
+            plot.Add.SignalXY(hitRates.Select(v => v.dist).ToArray(), hitRates.Select(v => v.hitRate).ToArray()).LegendText = "" + pulseValue;
+        }
+        plot.ShowLegend();
+        plot.XLabel("Distance");
+        plot.YLabel("Hit Rate");
+        plot.SaveSvg("hitRates.svg", 400, 300);
+
     }
 
     [Test]

@@ -16,11 +16,86 @@ LSH assigns points to buckets in such a way that points which lie close together
 
 - During indexing, each point is placed in multiple buckets
 - During lookup, multiple buckets are very likely identified, and all of them have to be searched
-- The parameters are chosen in such a way, that few points end up in the same bucket. However, if the data is not distributed evenly, many points may end up in the same bucket. Therefore it is important to implement the buckets in such a way tha they can handle this
+- The parameters are chosen in such a way that few points end up in the same bucket. However, if the data is not distributed evenly, many points may end up in the same bucket. Therefore it is important to implement the buckets in such a way tha they can handle this
 
-These concepts are reflected in the API. The `LSHIndex` class only handles the mapping between points and bucket IDs. How data is represented in buckets is handled by the caller. This allows for maximal flexibility.
+These concepts are reflected in the API. The `LshIndex` class only handles the mapping between points and bucket IDs and adds and retrieves the buckets from a `BucketStorage`. How data is added to and searched in buckets is handled by the caller. This allows for maximal flexibility.
 
-The `BucketStorage` is responsible for storing the buckets.
+A simple bucket implementation is to just store all points in a list, and search all points when querying. This is implemented in the `ListLshSet`.
+
+First we build a data set, containing 2'000 random 100 dimensional vectors, with a point close by for each.
+
+```c#
+var d = 100;
+var N = 2000;
+var data = Enumerable.Range(0, N).SelectMany(_ =>
+{
+    var v = RandomVectors.RandomUniform(d, 0, 20, random);
+    return (Vector<double>[])[v, v.Add(RandomVectors.RandomUniform(d, 0, 1, random))];
+}).ToArray();
+```
+
+Then we determine the distance distribution between two random points and between a random point and it's nearest neighbor:
+
+```c#
+var dAny = ProbabilityDensityFunction.FromAnyDistances(d, data, random);
+var dNn = ProbabilityDensityFunction.FromNnDistances(d, data, random);
+```
+
+If we plot this, we get
+
+![](images/dAny.svg)
+
+for random points and
+
+![](images/dNn.svg)
+
+for the nearest neighbors.
+
+We can now create a `ListLshSet` from this data and fill it and search the nearest neighbors
+
+```c#
+var set = new ListLshSet<int>(LshParameters.Calculate(data.Length, d, 0.1, dNn, dAny));
+data.ForEach((v, i) => set.Add(v, i));
+List<double> foundNNDistances = new();
+data.ForEach((v, indexV) =>
+{
+    var nn = set.Query(v, (p, indexP) => indexV != indexP);
+    if (nn != null)
+    {
+        var dist = (nn.Value.P - v).L2Norm();
+        foundNNDistances.Add(dist);
+    }
+});
+new HistogramPDF(foundNNDistances.Where(x => x < 50)).Plot("foundNN.svg");
+```
+
+Note that we had to filter out the query point itself during the query. The resulting distribution looks like this:
+
+![](images/foundNN.svg)
+
+Thus we clearly succeeded at finding the nearest neighbors with high probability.
+
+For the next demonstration we generate our data in much the same way, but without the nearest neighbors. For the nearest neighbor distance distribution, we use an unit impulse (all probability at one value). We then add a random vector of a certain length to the data points, and record the probability at which we find data point.
+
+```c#
+var data = Enumerable.Range(0, N).Select(_ => RandomVectors.RandomUniform(d, 0, 20, random)).ToArray();
+foreach (var pulseValue in (double[])[5, 15, 30, 50, 70])
+{
+    var set = new ListLshSet<int>(LshParameters.Calculate(data.Length, d, 0.1, ProbabilityDensityFunction.FromUnitImpulse(pulseValue), dAny));
+    data.ForEach(set.Add);
+    for (double distance = 1; distance < 100; distance = distance * 1.2 + 1)
+    {
+        var nn = set.Query(v + RandomVectors.RandomGivenLength(d, distance, random));
+        // record if v was found
+    }
+}
+```
+
+This yields the following graph:
+
+![](images/hitRates.svg)
+
+We can clearly see how increasing the distance used during indexing
 
 ## Implementation Style
 

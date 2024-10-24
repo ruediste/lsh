@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
 using ScottPlot;
@@ -23,6 +24,8 @@ public static class ProbabilityDensityFunction
         var samples = data.SampleWithoutReplacement(sampleSize, random).ToArray();
         return CalculateHistogram(dataDimensions, samples, samples, (dataIndex, sampleIndex) => dataIndex != sampleIndex);
     }
+
+    public static UnitImpulsePdf FromUnitImpulse(double value) => new UnitImpulsePdf(value);
 
     private static unsafe HistogramPDF CalculateHistogram(int dataDimensions, Vector<double>[] data, Vector<double>[] samples, Func<int, int, bool> filter)
     {
@@ -143,6 +146,11 @@ public class UnitImpulsePdf : InputDataProbabilityDistribution
 {
     public required double Value { get; init; }
 
+    public UnitImpulsePdf() { }
+
+    [SetsRequiredMembers]
+    public UnitImpulsePdf(double value) { Value = value; }
+
     public GaussianPDF MultiplyWithUnitNormal()
     => new GaussianPDF() { StandardDeviation = Value };
 }
@@ -183,7 +191,11 @@ public class HistogramPDF : InputDataProbabilityDistribution
     {
         Plot plot = new();
         Plot(plot);
-        plot.SavePng(fileName, 400, 300);
+        if (fileName.EndsWith(".svg"))
+            plot.SaveSvg(fileName, 400, 300);
+        else if (fileName.EndsWith(".png"))
+            plot.SavePng(fileName, 400, 300);
+        else throw new Exception("Unknown file format");
     }
     public void Plot(Plot plot)
     {
