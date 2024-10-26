@@ -103,6 +103,25 @@ The next graph keeps the NN-Distribution constant at 20 while varying delta:
 
 Here we clearly see how the the configured miss rate matches the miss rate at a distance of 20, which matches the NN-distribution used during indexing.
 
+### Performance
+
+From what you've seen so far you might conclude to just set your indexing NN-distribution a bit above of the distance you need nearest neighbors for and use a low `delta`. But we haven't yet discussed how performance is affected by these parameters. There are two costs: first finding the bucket, which involved multiplying the query vector with the index matrices. Secondly searching the buckets retrieved. The cost of searching the buckets depends heavily on the requirements and on how the buckets are implemented. For this analysis we assume you want the nearest neighbor and just store and search all points in each bucket.
+
+We use the same two examples as above, but this time we plot both the number of multiplications required to find a bucket and the number of points evaluated when searching all points in each retrieved bucket.
+
+![](images/NearestNeighborMultiplications_ExpectedNNDistance_large.svg)
+![](images/NearestNeighborPointsSearched_ExpectedNNDistance_QueryDistance_large.svg)
+
+We clearly see the immense cost when getting close to the average distance between points. Here the same plots without the largest expected nn distances, to make the values more readable:
+
+![](images/NearestNeighborMultiplications_ExpectedNNDistance.svg)
+![](images/NearestNeighborPointsSearched_ExpectedNNDistance_QueryDistance.svg)
+
+Looking at the effect of `delta` on these costs we see that increasing the delta reduces the costs, especially when looking at deltas below 0.1.
+
+![](images/NearestNeighborPointsMultiplications_Delta.svg)
+![](images/NearestNeighborPointsSearched_Delta_QueryDistance.svg)
+
 ## Implementation Style
 
 While care is taken to properly model the mathematical concepts, generalization is kept to a minimum and only the required functionality is implemented. This keeps the code base small and easy to understand. The mathematical concepts are documented in this readme instead of the code, due to the superior markup capabilities of Markdown.

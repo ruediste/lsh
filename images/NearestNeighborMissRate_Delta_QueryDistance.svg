@@ -3,96 +3,99 @@
 	<rect fill="white" width="400" height="300"/>
 	<path fill="none" stroke="#010101" stroke-width="1" stroke-miterlimit="4" stroke-opacity="0.098039217" d="M60.609 255.963L60.609 15M95.9595 255.963L95.9595 15M131.31 255.963L131.31 15M166.66 255.963L166.66 15M202.011 255.963L202.011 15M237.361 255.963L237.361 15M272.712 255.963L272.712 15M308.062 255.963L308.062 15M343.413 255.963L343.413 15M378.763 255.963L378.763 15"/>
 	<path fill="none" stroke="#010101" stroke-width="1" stroke-miterlimit="4" stroke-opacity="0.098039217" d="M48.8652 240.248L385 240.248M48.8652 219.295L385 219.295M48.8652 198.341L385 198.341M48.8652 177.388L385 177.388M48.8652 156.435L385 156.435M48.8652 135.481L385 135.481M48.8652 114.528L385 114.528M48.8652 93.5749L385 93.5749M48.8652 72.6216L385 72.6216M48.8652 51.6683L385 51.6683M48.8652 30.715L385 30.715"/>
-	<clipPath id="cl_4">
-		<rect x="48.865234" y="15" width="336.13477" height="240.96289"/>
-	</clipPath>
-	<g clip-path="url(#cl_4)">
-		<path fill="none" stroke="#1F77B4" stroke-width="1" stroke-miterlimit="4" d="M63.8652 240.248L67.8652 240.248L72.8652 240.248L78.8652 240.248L86.8652 240.248L94.8652 240.248L105.865 240.248L118.865 240.248L133.865 238.153L151.865 217.199L173.865 185.769L199.865 105.099L231.865 60.0496L268.865 46.4299L269.865 46.4299L314.865 39.0963L368.865 37.001"/>
-	</g>
 	<clipPath id="cl_5">
 		<rect x="48.865234" y="15" width="336.13477" height="240.96289"/>
 	</clipPath>
 	<g clip-path="url(#cl_5)">
-		<path fill="none" stroke="#FF7F0E" stroke-width="1" stroke-miterlimit="4" d="M63.8652 240.248L67.8652 240.248L72.8652 240.248L78.8652 240.248L86.8652 240.248L94.8652 240.248L105.865 240.248L118.865 240.248L133.865 233.962L151.865 200.437L173.865 140.72L199.865 93.5749L231.865 55.8589L268.865 39.0963L269.865 39.0963L314.865 40.144L368.865 32.8103"/>
+		<path fill="none" stroke="#1F77B4" stroke-width="1" stroke-miterlimit="4" d="M63.8652 240.248L67.8652 240.248L72.8652 240.248L78.8652 240.248L86.8652 240.248L94.8652 240.248L105.865 240.248L118.865 240.248L133.865 238.153L151.865 217.199L173.865 185.769L199.865 105.099L231.865 60.0496L268.865 46.4299L269.865 46.4299L314.865 39.0963L368.865 37.001"/>
 	</g>
 	<clipPath id="cl_6">
 		<rect x="48.865234" y="15" width="336.13477" height="240.96289"/>
 	</clipPath>
 	<g clip-path="url(#cl_6)">
-		<path fill="none" stroke="#2CA02C" stroke-width="1" stroke-miterlimit="4" d="M63.8652 240.248L67.8652 240.248L72.8652 240.248L78.8652 240.248L86.8652 240.248L94.8652 240.248L105.865 239.2L118.865 236.057L133.865 216.152L151.865 181.579L173.865 133.386L199.865 83.0982L231.865 46.4299L268.865 33.858L269.865 33.858L314.865 37.001L368.865 32.8103"/>
+		<path fill="none" stroke="#FF7F0E" stroke-width="1" stroke-miterlimit="4" d="M63.8652 240.248L67.8652 240.248L72.8652 240.248L78.8652 240.248L86.8652 240.248L94.8652 240.248L105.865 240.248L118.865 240.248L133.865 233.962L151.865 200.437L173.865 140.72L199.865 93.5749L231.865 55.8589L268.865 39.0963L269.865 39.0963L314.865 40.144L368.865 32.8103"/>
 	</g>
 	<clipPath id="cl_7">
 		<rect x="48.865234" y="15" width="336.13477" height="240.96289"/>
 	</clipPath>
 	<g clip-path="url(#cl_7)">
-		<path fill="none" stroke="#D62728" stroke-width="1" stroke-miterlimit="4" d="M63.8652 240.248L67.8652 240.248L72.8652 240.248L78.8652 240.248L86.8652 240.248L94.8652 240.248L105.865 237.105L118.865 219.295L133.865 204.627L151.865 148.053L173.865 98.8132L199.865 55.8589L231.865 40.144L268.865 33.858L269.865 33.858L314.865 32.8103L368.865 33.858"/>
+		<path fill="none" stroke="#2CA02C" stroke-width="1" stroke-miterlimit="4" d="M63.8652 240.248L67.8652 240.248L72.8652 240.248L78.8652 240.248L86.8652 240.248L94.8652 240.248L105.865 239.2L118.865 236.057L133.865 216.152L151.865 181.579L173.865 133.386L199.865 83.0982L231.865 46.4299L268.865 33.858L269.865 33.858L314.865 37.001L368.865 32.8103"/>
 	</g>
 	<clipPath id="cl_8">
 		<rect x="48.865234" y="15" width="336.13477" height="240.96289"/>
 	</clipPath>
 	<g clip-path="url(#cl_8)">
-		<path fill="none" stroke="#9467BD" stroke-width="1" stroke-miterlimit="4" d="M63.8652 240.248L67.8652 240.248L72.8652 240.248L78.8652 240.248L86.8652 239.2L94.8652 235.01L105.865 224.533L118.865 211.961L133.865 176.34L151.865 126.052L173.865 88.3365L199.865 53.7636L231.865 42.2393L268.865 33.858L269.865 33.858L314.865 33.858L368.865 31.7626"/>
+		<path fill="none" stroke="#D62728" stroke-width="1" stroke-miterlimit="4" d="M63.8652 240.248L67.8652 240.248L72.8652 240.248L78.8652 240.248L86.8652 240.248L94.8652 240.248L105.865 237.105L118.865 219.295L133.865 204.627L151.865 148.053L173.865 98.8132L199.865 55.8589L231.865 40.144L268.865 33.858L269.865 33.858L314.865 32.8103L368.865 33.858"/>
 	</g>
 	<clipPath id="cl_9">
 		<rect x="48.865234" y="15" width="336.13477" height="240.96289"/>
 	</clipPath>
 	<g clip-path="url(#cl_9)">
-		<path fill="none" stroke="#8C564B" stroke-width="1" stroke-miterlimit="4" d="M63.8652 240.248L67.8652 240.248L72.8652 240.248L78.8652 240.248L86.8652 240.248L94.8652 229.771L105.865 216.152L118.865 179.483L133.865 148.053L151.865 97.7655L173.865 73.6692L199.865 51.6683L231.865 37.001L268.865 33.858L269.865 33.858L314.865 31.7626L368.865 33.858"/>
+		<path fill="none" stroke="#9467BD" stroke-width="1" stroke-miterlimit="4" d="M63.8652 240.248L67.8652 240.248L72.8652 240.248L78.8652 240.248L86.8652 239.2L94.8652 235.01L105.865 224.533L118.865 211.961L133.865 176.34L151.865 126.052L173.865 88.3365L199.865 53.7636L231.865 42.2393L268.865 33.858L269.865 33.858L314.865 33.858L368.865 31.7626"/>
 	</g>
 	<clipPath id="cl_a">
 		<rect x="48.865234" y="15" width="336.13477" height="240.96289"/>
 	</clipPath>
 	<g clip-path="url(#cl_a)">
-		<path fill="none" stroke="#E377C2" stroke-width="1" stroke-miterlimit="4" d="M63.8652 240.248L67.8652 239.2L72.8652 231.867L78.8652 232.914L86.8652 207.77L94.8652 186.817L105.865 160.625L118.865 134.434L133.865 107.195L151.865 79.9552L173.865 55.8589L199.865 41.1916L231.865 33.858L268.865 31.7626L269.865 31.7626L314.865 30.715L368.865 31.7626"/>
+		<path fill="none" stroke="#8C564B" stroke-width="1" stroke-miterlimit="4" d="M63.8652 240.248L67.8652 240.248L72.8652 240.248L78.8652 240.248L86.8652 240.248L94.8652 229.771L105.865 216.152L118.865 179.483L133.865 148.053L151.865 97.7655L173.865 73.6692L199.865 51.6683L231.865 37.001L268.865 33.858L269.865 33.858L314.865 31.7626L368.865 33.858"/>
 	</g>
 	<clipPath id="cl_b">
 		<rect x="48.865234" y="15" width="336.13477" height="240.96289"/>
 	</clipPath>
 	<g clip-path="url(#cl_b)">
-		<path fill="none" stroke="#7F7F7F" stroke-width="1" stroke-miterlimit="4" d="M63.8652 238.153L67.8652 235.01L72.8652 226.628L78.8652 214.056L86.8652 191.008L94.8652 171.102L105.865 135.481L118.865 100.909L133.865 78.9075L151.865 62.1449L173.865 47.4776L199.865 40.144L231.865 33.858L268.865 31.7626L269.865 31.7626L314.865 30.715L368.865 31.7626"/>
+		<path fill="none" stroke="#E377C2" stroke-width="1" stroke-miterlimit="4" d="M63.8652 240.248L67.8652 239.2L72.8652 231.867L78.8652 232.914L86.8652 207.77L94.8652 186.817L105.865 160.625L118.865 134.434L133.865 107.195L151.865 79.9552L173.865 55.8589L199.865 41.1916L231.865 33.858L268.865 31.7626L269.865 31.7626L314.865 30.715L368.865 31.7626"/>
 	</g>
-	<rect fill="#010101" fill-opacity="0.2" x="312.33398" y="96.978516" width="68.666016" height="154.98438"/>
-	<rect fill="white" x="309.33398" y="93.978516" width="68.666016" height="154.98438"/>
-	<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" x="309.33398" y="93.978516" width="68.666016" height="154.98438"/>
 	<clipPath id="cl_c">
-		<rect x="318.33398" y="97.978516" width="50.666016" height="146.98438"/>
+		<rect x="48.865234" y="15" width="336.13477" height="240.96289"/>
 	</clipPath>
 	<g clip-path="url(#cl_c)">
-		<text transform="translate(344.334 105.415)" font-size="12" font-family="Pagul" x="0, 7.03125, 10.294922, 17.326172, " y="3.8935547, ">
+		<path fill="none" stroke="#7F7F7F" stroke-width="1" stroke-miterlimit="4" d="M63.8652 238.153L67.8652 235.01L72.8652 226.628L78.8652 214.056L86.8652 191.008L94.8652 171.102L105.865 135.481L118.865 100.909L133.865 78.9075L151.865 62.1449L173.865 47.4776L199.865 40.144L231.865 33.858L268.865 31.7626L269.865 31.7626L314.865 30.715L368.865 31.7626"/>
+	</g>
+	<rect fill="#010101" fill-opacity="0.2" x="308.77148" y="78.105469" width="72.228516" height="173.85742"/>
+	<rect fill="white" x="305.77148" y="75.105469" width="72.228516" height="173.85742"/>
+	<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" x="305.77148" y="75.105469" width="72.228516" height="173.85742"/>
+	<clipPath id="cl_d">
+		<rect x="314.77148" y="79.105469" width="54.228516" height="165.85742"/>
+	</clipPath>
+	<g clip-path="url(#cl_d)">
+		<text transform="translate(315.771 86.542)" font-size="12" font-family="Pagul" x="0, 7.8046875, 13.605469, 17.039062, 21.181641, " y="3.8935547, ">
+				Delta
+		</text>
+		<text transform="translate(340.771 105.415)" font-size="12" font-family="Pagul" x="0, 7.03125, 10.294922, 17.326172, " y="3.8935547, ">
 				0.01
 		</text>
-		<path fill="none" stroke="#1F77B4" stroke-width="1" stroke-miterlimit="4" d="M339.334 105.415L319.334 105.415"/>
-		<text transform="translate(344.334 124.288)" font-size="12" font-family="Pagul" x="0, 7.03125, 10.294922, 17.326172, " y="3.8935547, ">
+		<path fill="none" stroke="#1F77B4" stroke-width="1" stroke-miterlimit="4" d="M335.771 105.415L315.771 105.415"/>
+		<text transform="translate(340.771 124.288)" font-size="12" font-family="Pagul" x="0, 7.03125, 10.294922, 17.326172, " y="3.8935547, ">
 				0.05
 		</text>
-		<path fill="none" stroke="#FF7F0E" stroke-width="1" stroke-miterlimit="4" d="M339.334 124.288L319.334 124.288"/>
-		<text transform="translate(344.334 143.161)" font-size="12" font-family="Pagul" x="0, 7.03125, 10.294922, " y="3.8935547, ">
+		<path fill="none" stroke="#FF7F0E" stroke-width="1" stroke-miterlimit="4" d="M335.771 124.288L315.771 124.288"/>
+		<text transform="translate(340.771 143.161)" font-size="12" font-family="Pagul" x="0, 7.03125, 10.294922, " y="3.8935547, ">
 				0.1
 		</text>
-		<path fill="none" stroke="#2CA02C" stroke-width="1" stroke-miterlimit="4" d="M339.334 143.161L319.334 143.161"/>
-		<text transform="translate(344.334 162.034)" font-size="12" font-family="Pagul" x="0, 7.03125, 10.294922, " y="3.8935547, ">
+		<path fill="none" stroke="#2CA02C" stroke-width="1" stroke-miterlimit="4" d="M335.771 143.161L315.771 143.161"/>
+		<text transform="translate(340.771 162.034)" font-size="12" font-family="Pagul" x="0, 7.03125, 10.294922, " y="3.8935547, ">
 				0.2
 		</text>
-		<path fill="none" stroke="#D62728" stroke-width="1" stroke-miterlimit="4" d="M339.334 162.034L319.334 162.034"/>
-		<text transform="translate(344.334 180.907)" font-size="12" font-family="Pagul" x="0, 7.03125, 10.294922, " y="3.8935547, ">
+		<path fill="none" stroke="#D62728" stroke-width="1" stroke-miterlimit="4" d="M335.771 162.034L315.771 162.034"/>
+		<text transform="translate(340.771 180.907)" font-size="12" font-family="Pagul" x="0, 7.03125, 10.294922, " y="3.8935547, ">
 				0.3
 		</text>
-		<path fill="none" stroke="#9467BD" stroke-width="1" stroke-miterlimit="4" d="M339.334 180.907L319.334 180.907"/>
-		<text transform="translate(344.334 199.78)" font-size="12" font-family="Pagul" x="0, 7.03125, 10.294922, " y="3.8935547, ">
+		<path fill="none" stroke="#9467BD" stroke-width="1" stroke-miterlimit="4" d="M335.771 180.907L315.771 180.907"/>
+		<text transform="translate(340.771 199.78)" font-size="12" font-family="Pagul" x="0, 7.03125, 10.294922, " y="3.8935547, ">
 				0.5
 		</text>
-		<path fill="none" stroke="#8C564B" stroke-width="1" stroke-miterlimit="4" d="M339.334 199.78L319.334 199.78"/>
-		<text transform="translate(344.334 218.653)" font-size="12" font-family="Pagul" x="0, 7.03125, 10.294922, " y="3.8935547, ">
+		<path fill="none" stroke="#8C564B" stroke-width="1" stroke-miterlimit="4" d="M335.771 199.78L315.771 199.78"/>
+		<text transform="translate(340.771 218.653)" font-size="12" font-family="Pagul" x="0, 7.03125, 10.294922, " y="3.8935547, ">
 				0.7
 		</text>
-		<path fill="none" stroke="#E377C2" stroke-width="1" stroke-miterlimit="4" d="M339.334 218.653L319.334 218.653"/>
-		<text transform="translate(344.334 237.526)" font-size="12" font-family="Pagul" x="0, 7.03125, 10.294922, " y="3.8935547, ">
+		<path fill="none" stroke="#E377C2" stroke-width="1" stroke-miterlimit="4" d="M335.771 218.653L315.771 218.653"/>
+		<text transform="translate(340.771 237.526)" font-size="12" font-family="Pagul" x="0, 7.03125, 10.294922, " y="3.8935547, ">
 				0.8
 		</text>
-		<path fill="none" stroke="#7F7F7F" stroke-width="1" stroke-miterlimit="4" d="M339.334 237.526L319.334 237.526"/>
+		<path fill="none" stroke="#7F7F7F" stroke-width="1" stroke-miterlimit="4" d="M335.771 237.526L315.771 237.526"/>
 	</g>
-	<text transform="translate(216.933 296)" font-size="16" font-family="Pagul" x="-30.023438, -19.617188, -14.929688, -8.015625, -2.4921875, 5.5703125, 15.023438, 22.289062, " y="-3.390625, ">
-			Distance
+	<text transform="translate(216.933 296)" font-size="16" font-family="Pagul" x="-53.300781, -42.082031, -32.878906, -25.144531, -18.589844, -10.714844, -6.7460938, 3.6601562, 8.3476562, 15.261719, 20.785156, 28.847656, 38.300781, 45.566406, " y="-3.390625, ">
+			Query Distance
 	</text>
 	<path fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" d="M60.609 255.963L60.609 259.963"/>
 	<text transform="translate(60.609 261.963)" font-size="12" font-family="Pagul" x="-3.515625, " y="10.330078, ">

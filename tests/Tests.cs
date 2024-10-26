@@ -81,36 +81,57 @@ public class Tests
 
         var dAny = ProbabilityDensityFunction.FromAnyDistances(d, data, random);
         Plot plot = new();
+        plot.PlottableList.Add(new LegendTitle("Exp Dist", plot));
 
-        foreach (var pulseValue in (double[])[5, 15, 30, 50, 70])
+        Plot plotPointsSearched = new();
+        plotPointsSearched.PlottableList.Add(new LegendTitle("Exp Dist", plotPointsSearched));
+
+        List<(double dist, int multiplications)> multiplications = [];
+        foreach (var pulseValue in (double[])[5, 15, 20, 25, 30, /*50, 55*/])
         {
             var set = new ListLshSet<int>(LshParameters.Calculate(data.Length, d, 0.1, ProbabilityDensityFunction.FromUnitImpulse(pulseValue), dAny));
+            multiplications.Add((pulseValue, set.Index.Params.NumberOfMultiplicationsPerQuery));
 
             data.ForEach(set.Add);
 
+            List<(double dist, double searched)> pointsSearched = [];
             List<(double dist, double hitRate)> hitRates = [];
             for (double distance = 1; distance < 100; distance = distance * 1.2 + 1)
             {
 
                 long found = 0;
                 int sampleSize = 200;
+                long searched = 0;
                 data.Take(sampleSize).ForEach((v, indexV) =>
                 {
-                    var nn = set.Query(v + RandomVectors.RandomGivenLength(d, distance, random));
+                    var nn = set.Query(v + RandomVectors.RandomGivenLength(d, distance, random), (p, d) => { searched++; return true; });
                     if (nn != null && nn.Value.Data == indexV)
                     {
                         found++;
                     }
                 });
                 hitRates.Add((distance, (double)(sampleSize - found) / sampleSize));
+                pointsSearched.Add((distance, (double)searched / sampleSize));
             }
 
             plot.Add.SignalXY(hitRates.Select(v => v.dist).ToArray(), hitRates.Select(v => v.hitRate).ToArray()).LegendText = "" + pulseValue;
+            plotPointsSearched.Add.SignalXY(pointsSearched.Select(v => v.dist).ToArray(), pointsSearched.Select(v => v.searched).ToArray()).LegendText = "" + pulseValue;
         }
         plot.ShowLegend();
-        plot.XLabel("Distance");
-        plot.YLabel("Hit Rate");
+        plot.XLabel("Query Distance");
+        plot.YLabel("Miss Rate");
         plot.SaveSvg("NearestNeighborMissRate_ExpectedNNDistance_QueryDistance.svg", 400, 300);
+
+        plotPointsSearched.ShowLegend();
+        plotPointsSearched.XLabel("Query Distance");
+        plotPointsSearched.YLabel("Points Searched");
+        plotPointsSearched.SaveSvg("NearestNeighborPointsSearched_ExpectedNNDistance_QueryDistance.svg", 400, 300);
+
+        Plot plotMultiplications = new();
+        plotMultiplications.Add.SignalXY(multiplications.Select(v => v.dist).ToArray(), multiplications.Select(v => v.multiplications).ToArray());
+        plotMultiplications.XLabel("Expected NN Distance");
+        plotMultiplications.YLabel("Multiplications");
+        plotMultiplications.SaveSvg("NearestNeighborMultiplications_ExpectedNNDistance.svg", 400, 300);
 
     }
 
@@ -125,37 +146,56 @@ public class Tests
         var data = Enumerable.Range(0, N).Select(_ => RandomVectors.RandomUniform(d, 0, 20, random)).ToArray();
 
         var dAny = ProbabilityDensityFunction.FromAnyDistances(d, data, random);
-        Plot plot = new();
+        Plot plotMissRates = new();
+        plotMissRates.PlottableList.Add(new LegendTitle("Delta", plotMissRates));
+        Plot plotPointsSearched = new();
+        plotPointsSearched.PlottableList.Add(new LegendTitle("Delta", plotPointsSearched));
 
+        List<(double dist, int multiplications)> multiplications = [];
         foreach (var delta in (double[])[0.01, 0.05, 0.1, 0.2, 0.3, 0.5, 0.7, 0.8])
         {
             var set = new ListLshSet<int>(LshParameters.Calculate(data.Length, d, delta, ProbabilityDensityFunction.FromUnitImpulse(20), dAny));
+            multiplications.Add((delta, set.Index.Params.NumberOfMultiplicationsPerQuery));
 
             data.ForEach(set.Add);
 
             List<(double dist, double hitRate)> hitRates = [];
+            List<(double dist, double searched)> pointsSearched = [];
             for (double distance = 1; distance < 100; distance = distance * 1.2 + 1)
             {
-
+                long searched = 0;
                 long found = 0;
                 int sampleSize = 200;
                 data.Take(sampleSize).ForEach((v, indexV) =>
                 {
-                    var nn = set.Query(v + RandomVectors.RandomGivenLength(d, distance, random));
+                    var nn = set.Query(v + RandomVectors.RandomGivenLength(d, distance, random), (p, d) => { searched++; return true; });
                     if (nn != null && nn.Value.Data == indexV)
                     {
                         found++;
                     }
                 });
                 hitRates.Add((distance, (double)(sampleSize - found) / sampleSize));
+                pointsSearched.Add((distance, (double)searched / sampleSize));
             }
 
-            plot.Add.SignalXY(hitRates.Select(v => v.dist).ToArray(), hitRates.Select(v => v.hitRate).ToArray()).LegendText = "" + delta;
+            plotMissRates.Add.SignalXY(hitRates.Select(v => v.dist).ToArray(), hitRates.Select(v => v.hitRate).ToArray()).LegendText = "" + delta;
+            plotPointsSearched.Add.SignalXY(pointsSearched.Select(v => v.dist).ToArray(), pointsSearched.Select(v => v.searched).ToArray()).LegendText = "" + delta;
         }
-        plot.ShowLegend();
-        plot.XLabel("Distance");
-        plot.YLabel("Miss Rate");
-        plot.SaveSvg("NearestNeighborMissRate_Delta_QueryDistance.svg", 400, 300);
+        plotMissRates.ShowLegend();
+        plotMissRates.XLabel("Query Distance");
+        plotMissRates.YLabel("Miss Rate");
+        plotMissRates.SaveSvg("NearestNeighborMissRate_Delta_QueryDistance.svg", 400, 300);
+
+        plotPointsSearched.ShowLegend();
+        plotPointsSearched.XLabel("Query Distance");
+        plotPointsSearched.YLabel("Points Searched");
+        plotPointsSearched.SaveSvg("NearestNeighborPointsSearched_Delta_QueryDistance.svg", 400, 300);
+
+        Plot plotMultiplications = new();
+        plotMultiplications.Add.SignalXY(multiplications.Select(v => v.dist).ToArray(), multiplications.Select(v => v.multiplications).ToArray());
+        plotMultiplications.XLabel("Delta");
+        plotMultiplications.YLabel("Multiplications");
+        plotMultiplications.SaveSvg("NearestNeighborPointsMultiplications_Delta.svg", 400, 300);
 
     }
 
@@ -208,5 +248,30 @@ public class Tests
         plot.Axes.SetLimitsX(-20, 20);
         plot.Axes.SetLimitsY(0, 0.3);
         plot.SavePng("histogramMultiplication.png", 800, 600);
+    }
+}
+
+public class LegendTitle : IPlottable
+{
+    private readonly string text;
+    private readonly LegendItem item;
+
+    public LegendTitle(string text, Plot plot)
+    {
+        this.text = text;
+        item = new LegendItem { LabelText = text, LabelBold = true };
+        item.LabelStyle.OffsetX = -plot.Legend.SymbolWidth - plot.Legend.SymbolPadding;
+    }
+
+    public bool IsVisible { get; set; } = true;
+    public IAxes Axes { get; set; } = new Axes();
+
+    public IEnumerable<LegendItem> LegendItems => [item];
+
+    public AxisLimits GetAxisLimits() => AxisLimits.NoLimits;
+
+    public void Render(RenderPack rp)
+    {
+        // nop
     }
 }

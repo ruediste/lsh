@@ -155,6 +155,9 @@ public record LshParameters
         return new LshParameters { W = W, K = K, L = L, DataDimensions = dataDimensions };
     }
 
+    public int NumberOfMultiplicationsPerQuery
+    => DataDimensions * K * L;
+
 
     public override string ToString()
     => $"(W: {W}, K: {K}, L: {L})";
