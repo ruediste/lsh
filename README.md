@@ -93,9 +93,15 @@ foreach (var pulseValue in (double[])[5, 15, 30, 50, 70])
 
 This yields the following graph:
 
-![](images/hitRates.svg)
+![](images/NearestNeighborMissRate_ExpectedNNDistance_QueryDistance.svg)
 
-We can clearly see how increasing the distance used during indexing
+We can clearly see how the NN-distribution used during indexing equals the distance at which miss rate matches the `delta` parameter configured, 0.1 in our case. At an indexing distance of 70 the index stops working, as the expected NN distance matches or exceeds the distance between two random points.
+
+The next graph keeps the NN-Distribution constant at 20 while varying delta:
+
+![](images/NearestNeighborMissRate_Delta_QueryDistance.svg)
+
+Here we clearly see how the the configured miss rate matches the miss rate at a distance of 20, which matches the NN-distribution used during indexing.
 
 ## Implementation Style
 

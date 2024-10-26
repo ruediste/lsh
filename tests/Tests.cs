@@ -70,7 +70,7 @@ public class Tests
     }
 
     [Test]
-    public void QueryPointDistanceDistribution()
+    public void NearestNeighborMissRate_ExpectedNNDistance_QueryDistance()
     {
         // build test distribution
         var random = new Random(0);
@@ -102,7 +102,7 @@ public class Tests
                         found++;
                     }
                 });
-                hitRates.Add((distance, (double)found / sampleSize));
+                hitRates.Add((distance, (double)(sampleSize - found) / sampleSize));
             }
 
             plot.Add.SignalXY(hitRates.Select(v => v.dist).ToArray(), hitRates.Select(v => v.hitRate).ToArray()).LegendText = "" + pulseValue;
@@ -110,9 +110,55 @@ public class Tests
         plot.ShowLegend();
         plot.XLabel("Distance");
         plot.YLabel("Hit Rate");
-        plot.SaveSvg("hitRates.svg", 400, 300);
+        plot.SaveSvg("NearestNeighborMissRate_ExpectedNNDistance_QueryDistance.svg", 400, 300);
 
     }
+
+    [Test]
+    public void NearestNeighborMissRate_Delta_QueryDistance()
+    {
+        // build test distribution
+        var random = new Random(0);
+
+        var d = 100;
+        var N = 2000;
+        var data = Enumerable.Range(0, N).Select(_ => RandomVectors.RandomUniform(d, 0, 20, random)).ToArray();
+
+        var dAny = ProbabilityDensityFunction.FromAnyDistances(d, data, random);
+        Plot plot = new();
+
+        foreach (var delta in (double[])[0.01, 0.05, 0.1, 0.2, 0.3, 0.5, 0.7, 0.8])
+        {
+            var set = new ListLshSet<int>(LshParameters.Calculate(data.Length, d, delta, ProbabilityDensityFunction.FromUnitImpulse(20), dAny));
+
+            data.ForEach(set.Add);
+
+            List<(double dist, double hitRate)> hitRates = [];
+            for (double distance = 1; distance < 100; distance = distance * 1.2 + 1)
+            {
+
+                long found = 0;
+                int sampleSize = 200;
+                data.Take(sampleSize).ForEach((v, indexV) =>
+                {
+                    var nn = set.Query(v + RandomVectors.RandomGivenLength(d, distance, random));
+                    if (nn != null && nn.Value.Data == indexV)
+                    {
+                        found++;
+                    }
+                });
+                hitRates.Add((distance, (double)(sampleSize - found) / sampleSize));
+            }
+
+            plot.Add.SignalXY(hitRates.Select(v => v.dist).ToArray(), hitRates.Select(v => v.hitRate).ToArray()).LegendText = "" + delta;
+        }
+        plot.ShowLegend();
+        plot.XLabel("Distance");
+        plot.YLabel("Miss Rate");
+        plot.SaveSvg("NearestNeighborMissRate_Delta_QueryDistance.svg", 400, 300);
+
+    }
+
 
     [Test]
     public void UnitImpulseMultiplication()
